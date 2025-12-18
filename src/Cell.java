@@ -5,7 +5,7 @@ public class Cell {
     public Type type;
     public int cost;
 
-    // Variabel Pathfinding
+    // State untuk algoritma
     public boolean visited = false;
     public boolean isCurrentHead = false;
     public Cell parent = null;
@@ -19,21 +19,16 @@ public class Cell {
         GRASS(new Color(46, 204, 113), 1),
         MUD(new Color(211, 84, 0), 5),
         WATER(new Color(52, 152, 219), 10);
-
-        public final Color color;
-        public final int weight;
+        public final Color color; public final int weight;
         Type(Color c, int w) { this.color = c; this.weight = w; }
     }
 
     public Cell(int r, int c, Type t) {
-        this.r = r;
-        this.c = c;
-        setType(t);
+        this.r = r; this.c = c; setType(t);
     }
 
     public void setType(Type t) {
-        this.type = t;
-        this.cost = t.weight;
+        this.type = t; this.cost = t.weight;
     }
 
     public void resetAlgo() {
@@ -45,35 +40,31 @@ public class Cell {
     }
 
     public void draw(Graphics g, int size) {
-        // 1. Gambar Base Terrain
+        // 1. Terrain
         g.setColor(type.color);
         g.fillRect(c * size, r * size, size, size);
-
-        g.setColor(new Color(0, 0, 0, 50)); // Grid border tipis
+        g.setColor(new Color(0, 0, 0, 50));
         g.drawRect(c * size, r * size, size, size);
 
-        // 2. Trace / Jejak Transparan
+        // 2. VISUALISASI "VISITED" (JEJAK PENCARIAN) - Cyan Transparan
         if (visited && type != Type.WALL) {
-            g.setColor(new Color(0, 255, 255, 60)); // Cyan Transparan (Alpha 60)
+            g.setColor(new Color(0, 200, 255, 60)); // Cyan transparan
             g.fillRect(c * size, r * size, size, size);
+            g.setColor(new Color(0, 200, 255, 120)); // Border sedikit lebih tebal
+            g.drawRect(c * size, r * size, size, size);
         }
 
-        // 3. Animasi Head (Titik yang sedang dicek)
+        // 3. Head (Animasi kotak berjalan)
         if (isCurrentHead) {
             g.setColor(Color.MAGENTA);
             g.fillRect(c * size + 4, r * size + 4, size - 8, size - 8);
         }
 
-        // 4. Marker Start (Hijau)
-        if (r == 1 && c == 1) {
-            g.setColor(Color.GREEN);
-            g.fillOval(c * size + 2, r * size + 2, size - 4, size - 4);
-            g.setColor(Color.WHITE);
-            g.drawOval(c * size + 2, r * size + 2, size - 4, size - 4);
-        }
+        // 4. Start Marker
+        if (r == 1 && c == 1) drawMarker(g, size, Color.GREEN);
     }
 
-    public void drawMarker(Graphics g, int s, Color color) {
+    private void drawMarker(Graphics g, int s, Color color) {
         g.setColor(color);
         g.fillOval(c * s + 2, r * s + 2, s - 4, s - 4);
         g.setColor(Color.WHITE);

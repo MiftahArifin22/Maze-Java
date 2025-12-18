@@ -16,7 +16,7 @@ public class MazePanel extends JPanel {
     private final MazeGenerator generator;
     private final MazeSolver solver;
 
-    // --- FITUR BARU: Persistent Paths ---
+    // Menyimpan Jalur (Persistent Paths)
     public Map<String, List<Cell>> savedPaths = new HashMap<>();
     public Map<String, Color> pathColors = new HashMap<>();
 
@@ -33,28 +33,30 @@ public class MazePanel extends JPanel {
         this.generator = new MazeGenerator(this);
         this.solver = new MazeSolver(this);
 
-        // Setup Warna Awal (Mungkin masih ada yang tabrakan di tahap ini)
-        pathColors.put("BFS", Color.CYAN);
+        // Definisi Warna Jalur
+        pathColors.put("BFS", Color.YELLOW);
         pathColors.put("DFS", Color.MAGENTA);
         pathColors.put("Dijkstra", new Color(255, 140, 0));
         pathColors.put("A*", Color.RED);
 
-        generateMaze();
+        generateMaze("Prim's Algorithm");
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // 1. Gambar Grid & Trace (via Cell.draw)
+        // 1. Gambar Grid & Cell (termasuk visualisasi visited)
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 if (grid[r][c] != null) grid[r][c].draw(g, cellSize);
             }
         }
 
-        // 2. FITUR BARU: Gambar Jalur Permanen (Saved Paths)
         Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // 2. Gambar Jalur Permanen (Saved Paths)
         for (Map.Entry<String, List<Cell>> entry : savedPaths.entrySet()) {
             String algo = entry.getKey();
             List<Cell> path = entry.getValue();
@@ -65,12 +67,12 @@ public class MazePanel extends JPanel {
             for (Cell cell : path) {
                 if (cell == startNode || cell == endNode) continue;
 
-                // Offset agar jalur bertumpuk terlihat semua (Layering)
+                // Offset agar garis tidak saling menimpa total
                 int offset = 0;
-                if (algo.equals("BFS")) offset = 6;
-                if (algo.equals("DFS")) offset = 8;
-                if (algo.equals("Dijkstra")) offset = 10;
-                if (algo.equals("A*")) offset = 4;
+                if (algo.equals("BFS")) offset = 6;       // Kuning (Tengah)
+                if (algo.equals("DFS")) offset = 8;       // Magenta (Lebih kecil)
+                if (algo.equals("Dijkstra")) offset = 10; // Oranye (Paling kecil)
+                if (algo.equals("A*")) offset = 4;        // Merah (Paling besar/luar)
 
                 g2.fillRect(cell.c * cellSize + offset, cell.r * cellSize + offset,
                         cellSize - (offset*2), cellSize - (offset*2));
@@ -81,14 +83,12 @@ public class MazePanel extends JPanel {
                 g2.setColor(c);
             }
         }
-
-        // 3. Gambar End Node Manual (Agar selalu di atas path)
-        if (endNode != null) endNode.drawMarker(g, cellSize, Color.RED);
     }
 
-    public void generateMaze() {
-        clearPaths(); // Hapus jalur lama saat generate
-        generator.generate();
+    public void generateMaze(String method) {
+        clearPaths(); // Hapus jalur jika maze baru di-generate
+        if (method != null && method.contains("Prim")) generator.generatePrim();
+        else generator.generateKruskal();
         resetAlgoState();
         repaint();
     }
@@ -97,7 +97,6 @@ public class MazePanel extends JPanel {
         solver.solve(algo);
     }
 
-    // Method baru untuk menyimpan jalur dari Solver
     public void addPath(String algo, List<Cell> path) {
         savedPaths.put(algo, path);
         repaint();
@@ -112,7 +111,7 @@ public class MazePanel extends JPanel {
     public void resetAlgoState() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                if(grid[r][c] != null) grid[r][c].resetAlgo();
+                if (grid[r][c] != null) grid[r][c].resetAlgo();
             }
         }
         repaint();

@@ -1,18 +1,20 @@
+import javax.swing.*;
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class MazeSolver {
     private final MazePanel panel;
     private int visitedCount = 0;
-    private String currentAlgo = "";
+    private String currentAlgoName = "";
 
     public MazeSolver(MazePanel panel) {
         this.panel = panel;
     }
 
     public void solve(String algo) {
-        panel.resetAlgoState();
-
-        this.currentAlgo = algo;
+        panel.resetAlgoState(); // Reset jejak visited lama
+        this.currentAlgoName = algo;
         panel.isAnimating = true;
         visitedCount = 0;
 
@@ -24,24 +26,22 @@ public class MazeSolver {
         panel.isAnimating = false;
     }
 
+    // --- ALGORITMA SETUP ---
     private void solveBFS() {
         Queue<Cell> q = new LinkedList<>();
         initSearch(q, null, null);
         processSearch(q, null, null, false);
     }
-
     private void solveDFS() {
         Stack<Cell> s = new Stack<>();
         initSearch(null, s, null);
         processSearch(null, s, null, false);
     }
-
     private void solveDijkstra() {
         PriorityQueue<Cell> pq = new PriorityQueue<>(Comparator.comparingInt(c -> c.dist));
         initSearch(null, null, pq);
         processSearch(null, null, pq, false);
     }
-
     private void solveAStar() {
         PriorityQueue<Cell> pq = new PriorityQueue<>(Comparator.comparingInt(c -> c.fCost));
         initSearch(null, null, pq);
@@ -60,11 +60,12 @@ public class MazeSolver {
 
     private void processSearch(Queue<Cell> q, Stack<Cell> s, PriorityQueue<Cell> pq, boolean isAStar) {
         while (true) {
+            // 1. Cek Antrian Kosong (Belum ketemu target tapi antrian habis)
             if ((q != null && q.isEmpty()) || (s != null && s.isEmpty()) || (pq != null && pq.isEmpty())) {
-                if (panel.mainFrame != null) panel.mainFrame.updateStats(visitedCount, -1, true);
                 break;
             }
 
+            // 2. Ambil Node
             Cell curr;
             if (q != null) curr = q.poll();
             else if (s != null) curr = s.pop();
@@ -72,30 +73,35 @@ public class MazeSolver {
 
             if (pq != null && curr.visited && curr != panel.startNode) continue;
 
-            curr.visited = true;
+            // --- VISUALISASI ---
+            curr.visited = true; // Akan digambar warna Cyan transparan di Cell.draw()
             visitedCount++;
+
             if (panel.mainFrame != null) panel.mainFrame.updateStats(visitedCount, 0, false);
 
+            // 3. Target Found
             if (curr == panel.endNode) {
                 reconstructPath(curr);
                 return;
             }
 
+            // 4. Animasi Head
             curr.isCurrentHead = true;
             panel.repaint();
-            try { Thread.sleep(3); } catch (Exception e) {}
+            try { Thread.sleep(5); } catch (Exception e) {}
             curr.isCurrentHead = false;
 
+            // 5. Cek Tetangga
             for (Cell n : getNeighbors(curr)) {
                 if (n.type != Cell.Type.WALL) {
-                    if (q != null || s != null) {
+                    if (q != null || s != null) { // Unweighted
                         if (!n.visited) {
                             n.visited = true;
                             n.parent = curr;
                             n.dist = curr.dist + 1;
                             if (q != null) q.add(n); else s.push(n);
                         }
-                    } else {
+                    } else { // Weighted
                         int newDist = curr.dist + 1 + n.cost;
                         if (newDist < n.dist) {
                             n.dist = newDist;
@@ -104,29 +110,32 @@ public class MazeSolver {
                                 n.hCost = getHeuristic(n, panel.endNode);
                                 n.fCost = n.dist + n.hCost;
                             }
-                            pq.remove(n); pq.add(n);
+                            pq.remove(n);
+                            pq.add(n);
                         }
                     }
                 }
             }
         }
+
+        // --- SAFETY CHECK (NO PATH) ---
+        // Panggil method resmi 'setStatus' agar tidak error
+        if (panel.mainFrame != null) {
+            panel.mainFrame.setStatus("No Path Found!", Color.RED);
+        }
     }
 
     private void reconstructPath(Cell end) {
-        // Kumpulkan Cell ke dalam List
         List<Cell> pathList = new ArrayList<>();
         Cell c = end;
         int totalCost = end.dist;
-
         while (c != null) {
             pathList.add(c);
             c = c.parent;
         }
-        Collections.reverse(pathList); // Balik agar urut dari start
+        Collections.reverse(pathList);
 
-        // Simpan ke Panel
-        panel.addPath(currentAlgo, pathList);
-
+        panel.addPath(currentAlgoName, pathList);
         if (panel.mainFrame != null) panel.mainFrame.updateStats(visitedCount, totalCost, true);
     }
 
@@ -135,9 +144,7 @@ public class MazeSolver {
         int[][] dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
         for (int[] d : dirs) {
             int nr = c.r + d[0], nc = c.c + d[1];
-            if (nr >= 0 && nr < panel.rows && nc >= 0 && nc < panel.cols) {
-                l.add(panel.grid[nr][nc]);
-            }
+            if (nr >= 0 && nr < panel.rows && nc >= 0 && nc < panel.cols) l.add(panel.grid[nr][nc]);
         }
         return l;
     }

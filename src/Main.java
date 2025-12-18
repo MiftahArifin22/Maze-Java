@@ -9,10 +9,11 @@ public class Main extends JFrame {
 
     private MazePanel mazePanel;
     private JLabel lblStatus, lblAlgoName, lblLiveCost, lblFinalCost;
-    private JButton btnGenPrim, btnClearPaths;
+    private JButton btnGenMaze, btnClearPaths;
+    private JComboBox<String> cmbGenAlgo;
 
     public Main() {
-        setTitle("Java Maze Pathfinder (Commit 2: Trace & Persistence)");
+        setTitle("Java Maze Pathfinder (Final Fix)");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         setResizable(false);
@@ -69,17 +70,17 @@ public class Main extends JFrame {
         panel.add(lblStatus);
         panel.add(Box.createVerticalStrut(15));
 
-        // Solvers
-        panel.add(createBtn("BFS (Cyan)", new Color(52, 152, 219), "BFS"));
+        // Buttons
+        panel.add(createBtn("BFS (Yellow)", new Color(218, 165, 32), "BFS"));
         panel.add(Box.createVerticalStrut(5));
         panel.add(createBtn("DFS (Magenta)", new Color(142, 68, 173), "DFS"));
         panel.add(Box.createVerticalStrut(15));
         panel.add(createBtn("Dijkstra (Orange)", new Color(230, 126, 34), "Dijkstra"));
         panel.add(Box.createVerticalStrut(5));
         panel.add(createBtn("A* Star (Red)", new Color(231, 76, 60), "A*"));
-        panel.add(Box.createVerticalStrut(15));
+        panel.add(Box.createVerticalStrut(10));
 
-        // Clear Paths Button
+        // Clear Paths
         btnClearPaths = new JButton("Clear Paths Only");
         btnClearPaths.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnClearPaths.setBackground(Color.GRAY);
@@ -87,8 +88,21 @@ public class Main extends JFrame {
         btnClearPaths.addActionListener(e -> mazePanel.clearPaths());
         panel.add(btnClearPaths);
         panel.add(Box.createVerticalStrut(20));
-        btnGenPrim = createBtn("Generate New Maze", new Color(39, 174, 96), "GEN");
-        panel.add(btnGenPrim);
+
+        // Generate
+        JLabel lblGen = new JLabel("Generation Method:");
+        lblGen.setForeground(Color.LIGHT_GRAY);
+        lblGen.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(lblGen);
+
+        String[] genMethods = { "Prim's Algorithm", "Kruskal's Algorithm" };
+        cmbGenAlgo = new JComboBox<>(genMethods);
+        cmbGenAlgo.setMaximumSize(new Dimension(250, 30));
+        panel.add(cmbGenAlgo);
+        panel.add(Box.createVerticalStrut(5));
+
+        btnGenMaze = createBtn("Generate New Maze", new Color(39, 174, 96), "GEN");
+        panel.add(btnGenMaze);
 
         return panel;
     }
@@ -97,6 +111,7 @@ public class Main extends JFrame {
         if (mazePanel.isAnimating) return;
         lblAlgoName.setText(type);
         lblStatus.setText("Running...");
+        lblStatus.setForeground(Color.ORANGE); // Reset warna status
         lblLiveCost.setText("0");
         lblFinalCost.setText("-");
         new Thread(() -> mazePanel.solveMaze(type)).start();
@@ -107,16 +122,18 @@ public class Main extends JFrame {
             if (!finished) {
                 lblLiveCost.setText(String.valueOf(checkCount));
             } else {
-                if (finalCost == -1) {
-                    lblFinalCost.setText("X");
-                    lblStatus.setText("Failed");
-                    lblStatus.setForeground(Color.RED);
-                } else {
-                    lblFinalCost.setText(String.valueOf(finalCost));
-                    lblStatus.setText("Done!");
-                    lblStatus.setForeground(Color.GREEN);
-                }
+                lblFinalCost.setText(String.valueOf(finalCost));
+                lblStatus.setText("Done!");
+                lblStatus.setForeground(Color.GREEN);
             }
+        });
+    }
+
+    // --- SOLUSI ERROR: Method ini dipanggil oleh MazeSolver ---
+    public void setStatus(String text, Color color) {
+        SwingUtilities.invokeLater(() -> {
+            lblStatus.setText(text);
+            lblStatus.setForeground(color);
         });
     }
 
@@ -137,7 +154,10 @@ public class Main extends JFrame {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 11));
 
         btn.addActionListener(e -> {
-            if (action.equals("GEN")) mazePanel.generateMaze();
+            if (action.equals("GEN")) {
+                String selected = (String) cmbGenAlgo.getSelectedItem();
+                mazePanel.generateMaze(selected);
+            }
             else runAlgo(action);
         });
         return btn;
