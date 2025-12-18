@@ -15,12 +15,10 @@ public class MazeGenerator {
         int cols = panel.cols;
         Cell[][] grid = panel.grid;
 
-        // Reset grid penuh tembok
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) grid[r][c] = new Cell(r, c, Cell.Type.WALL);
         }
 
-        // --- Randomized Prim's Algorithm ---
         int sr = 1, sc = 1;
         grid[sr][sc].setType(Cell.Type.NORMAL);
         ArrayList<Cell> walls = new ArrayList<>();
@@ -29,7 +27,6 @@ public class MazeGenerator {
         while (!walls.isEmpty()) {
             int idx = rand.nextInt(walls.size());
             Cell w = walls.remove(idx);
-
             List<Cell> neighbors = getNeighborsDist2(w.r, w.c, grid);
             List<Cell> connected = new ArrayList<>();
             for (Cell n : neighbors) if (n.type != Cell.Type.WALL) connected.add(n);
@@ -41,7 +38,6 @@ public class MazeGenerator {
             }
         }
 
-        // --- Add Loops (Multiple Paths) ---
         int loops = (rows * cols) / 15;
         for (int i = 0; i < loops; i++) {
             int r = rand.nextInt(rows - 2) + 1;
@@ -51,7 +47,6 @@ public class MazeGenerator {
             }
         }
 
-        // --- Random Terrain ---
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 if (grid[r][c].type != Cell.Type.WALL) {

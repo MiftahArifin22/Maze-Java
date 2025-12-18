@@ -9,10 +9,10 @@ public class Main extends JFrame {
 
     private MazePanel mazePanel;
     private JLabel lblStatus, lblAlgoName, lblLiveCost, lblFinalCost;
-    private JButton btnGenPrim;
+    private JButton btnGenPrim, btnClearPaths;
 
     public Main() {
-        setTitle("Java Maze Pathfinder (Commit 1)");
+        setTitle("Java Maze Pathfinder (Commit 2: Trace & Persistence)");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         setResizable(false);
@@ -69,18 +69,24 @@ public class Main extends JFrame {
         panel.add(lblStatus);
         panel.add(Box.createVerticalStrut(15));
 
-        // Tombol Solvers
-        // Warna Tombol disesuaikan dengan Warna Jalur yang akan digambar
-        panel.add(createBtn("BFS (Yellow)", new Color(218, 165, 32), "BFS"));
+        // Solvers
+        panel.add(createBtn("BFS (Cyan)", new Color(52, 152, 219), "BFS"));
         panel.add(Box.createVerticalStrut(5));
         panel.add(createBtn("DFS (Magenta)", new Color(142, 68, 173), "DFS"));
         panel.add(Box.createVerticalStrut(15));
         panel.add(createBtn("Dijkstra (Orange)", new Color(230, 126, 34), "Dijkstra"));
         panel.add(Box.createVerticalStrut(5));
         panel.add(createBtn("A* Star (Red)", new Color(231, 76, 60), "A*"));
-        panel.add(Box.createVerticalStrut(20));
+        panel.add(Box.createVerticalStrut(15));
 
-        // Generate Button
+        // Clear Paths Button
+        btnClearPaths = new JButton("Clear Paths Only");
+        btnClearPaths.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnClearPaths.setBackground(Color.GRAY);
+        btnClearPaths.setForeground(Color.WHITE);
+        btnClearPaths.addActionListener(e -> mazePanel.clearPaths());
+        panel.add(btnClearPaths);
+        panel.add(Box.createVerticalStrut(20));
         btnGenPrim = createBtn("Generate New Maze", new Color(39, 174, 96), "GEN");
         panel.add(btnGenPrim);
 

@@ -7,15 +7,11 @@ public class Cell {
 
     // Variabel Pathfinding
     public boolean visited = false;
-    public boolean isPath = false;
     public boolean isCurrentHead = false;
     public Cell parent = null;
     public int dist = Integer.MAX_VALUE;
     public int hCost = 0;
     public int fCost = Integer.MAX_VALUE;
-
-    // Warna Path Dinamis (Diubah oleh Solver)
-    public Color pathColor = Color.YELLOW;
 
     public enum Type {
         WALL(new Color(20, 20, 20), 0),
@@ -42,12 +38,10 @@ public class Cell {
 
     public void resetAlgo() {
         visited = false;
-        isPath = false;
         isCurrentHead = false;
         parent = null;
         dist = Integer.MAX_VALUE;
         fCost = Integer.MAX_VALUE;
-        pathColor = Color.YELLOW; // Reset warna ke default
     }
 
     public void draw(Graphics g, int size) {
@@ -58,12 +52,10 @@ public class Cell {
         g.setColor(new Color(0, 0, 0, 50)); // Grid border tipis
         g.drawRect(c * size, r * size, size, size);
 
-        // 2. Gambar Jalur Final (Warna Dinamis)
-        if (isPath) {
-            g.setColor(pathColor);
-            g.fillRect(c * size + 6, r * size + 6, size - 12, size - 12);
-            g.setColor(Color.BLACK);
-            g.drawRect(c * size + 6, r * size + 6, size - 12, size - 12);
+        // 2. Trace / Jejak Transparan
+        if (visited && type != Type.WALL) {
+            g.setColor(new Color(0, 255, 255, 60)); // Cyan Transparan (Alpha 60)
+            g.fillRect(c * size, r * size, size, size);
         }
 
         // 3. Animasi Head (Titik yang sedang dicek)
@@ -74,11 +66,13 @@ public class Cell {
 
         // 4. Marker Start (Hijau)
         if (r == 1 && c == 1) {
-            drawMarker(g, size, Color.GREEN);
+            g.setColor(Color.GREEN);
+            g.fillOval(c * size + 2, r * size + 2, size - 4, size - 4);
+            g.setColor(Color.WHITE);
+            g.drawOval(c * size + 2, r * size + 2, size - 4, size - 4);
         }
     }
 
-    // Helper menggambar lingkaran marker
     public void drawMarker(Graphics g, int s, Color color) {
         g.setColor(color);
         g.fillOval(c * s + 2, r * s + 2, s - 4, s - 4);

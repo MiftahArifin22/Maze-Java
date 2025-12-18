@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.util.*;
 
 public class MazeSolver {
@@ -11,8 +10,9 @@ public class MazeSolver {
     }
 
     public void solve(String algo) {
-        this.currentAlgo = algo;
         panel.resetAlgoState();
+
+        this.currentAlgo = algo;
         panel.isAnimating = true;
         visitedCount = 0;
 
@@ -60,7 +60,6 @@ public class MazeSolver {
 
     private void processSearch(Queue<Cell> q, Stack<Cell> s, PriorityQueue<Cell> pq, boolean isAStar) {
         while (true) {
-            // Cek jika kosong -> Not Found
             if ((q != null && q.isEmpty()) || (s != null && s.isEmpty()) || (pq != null && pq.isEmpty())) {
                 if (panel.mainFrame != null) panel.mainFrame.updateStats(visitedCount, -1, true);
                 break;
@@ -114,21 +113,20 @@ public class MazeSolver {
     }
 
     private void reconstructPath(Cell end) {
-        // Tentukan warna sesuai algoritma yang sedang jalan
-        Color pathColor = Color.YELLOW; // Default BFS
-        if (currentAlgo.equals("DFS")) pathColor = Color.MAGENTA;
-        else if (currentAlgo.equals("Dijkstra")) pathColor = new Color(255, 140, 0); // Orange
-        else if (currentAlgo.equals("A*")) pathColor = Color.RED;
-
+        // Kumpulkan Cell ke dalam List
+        List<Cell> pathList = new ArrayList<>();
         Cell c = end;
         int totalCost = end.dist;
+
         while (c != null) {
-            c.isPath = true;
-            c.pathColor = pathColor; // Set warna ke cell
+            pathList.add(c);
             c = c.parent;
-            panel.repaint();
-            try { Thread.sleep(10); } catch (Exception e) {}
         }
+        Collections.reverse(pathList); // Balik agar urut dari start
+
+        // Simpan ke Panel
+        panel.addPath(currentAlgo, pathList);
+
         if (panel.mainFrame != null) panel.mainFrame.updateStats(visitedCount, totalCost, true);
     }
 
